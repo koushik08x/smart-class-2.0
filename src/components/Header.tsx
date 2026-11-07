@@ -6,7 +6,6 @@ import {
   Sparkles,
   LogOut,
   UserPlus,
-  Download,
 } from 'lucide-react';
 import { NotificationItem } from '../types';
 import { notificationService } from '../services/notificationService';
@@ -71,17 +70,6 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Control Nodes */}
       <div className="flex items-center gap-2.5 sm:gap-3.5">
-        {/* Export Code ZIP Button */}
-        <a
-          href="/smart-classroom-2.0.zip"
-          download="smart-classroom-2.0.zip"
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-gradient-to-r from-[#8B5CF6] to-[#06B6D4] text-white shadow-[0_0_15px_rgba(6,182,212,0.4)] hover:brightness-110 transition-all cursor-pointer"
-          title="Download Complete Source Code ZIP"
-        >
-          <Download className="w-3.5 h-3.5" />
-          <span className="font-semibold">Export Code ZIP</span>
-        </a>
-
         {/* Notifications Bell */}
         <div className="relative">
           <button
