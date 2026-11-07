@@ -1,0 +1,6 @@
+{
+  "name": "SmartClassroom 2.0 - Vision Lumina",
+  "description": "Next-generation academic hub with spatial glass interface, live attendance telemetry, quizzes, notes, assignments, timetable, and full Supabase backend.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
