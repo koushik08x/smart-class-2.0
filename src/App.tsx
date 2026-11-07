@@ -87,6 +87,7 @@ function DashboardContent() {
         {/* Spatial Top Header - backend console hidden from main header */}
         <Header
           onOpenRegisterModal={() => setShowRegisterModal(true)}
+          onSelectTab={setActiveTab}
           notifications={notifications}
           onRefreshNotifications={loadNotifications}
         />
@@ -95,7 +96,7 @@ function DashboardContent() {
         <main className="max-w-7xl w-full mx-auto px-4 sm:px-8 pt-6 pb-28 flex-1">
           {!isApproved ? (
             /* Protected Route Enforcing Approval Workflow */
-            <PendingApprovalView />
+            <PendingApprovalView onGoToAdmin={() => setActiveTab('admin')} />
           ) : (
             /* Approved Classroom Hub */
             <div className="animate-in fade-in duration-300">

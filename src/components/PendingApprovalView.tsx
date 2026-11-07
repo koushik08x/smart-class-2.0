@@ -2,9 +2,20 @@ import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Clock, ShieldAlert, LogOut, ArrowRight, Sparkles, UserCheck } from 'lucide-react';
 
-export const PendingApprovalView: React.FC = () => {
+interface PendingApprovalViewProps {
+  onGoToAdmin?: () => void;
+}
+
+export const PendingApprovalView: React.FC<PendingApprovalViewProps> = ({ onGoToAdmin }) => {
   const { user, switchUser, logout } = useAuth();
   const isRejected = user?.approval_status === 'rejected';
+
+  const handleSwitchToAdmin = async () => {
+    await switchUser('00000000-0000-0000-0000-000000000001');
+    if (onGoToAdmin) {
+      onGoToAdmin();
+    }
+  };
 
   return (
     <div className="min-h-[70vh] flex items-center justify-center p-4">
@@ -52,8 +63,8 @@ export const PendingApprovalView: React.FC = () => {
           </p>
           <div className="flex justify-center gap-3">
             <button
-              onClick={() => switchUser('00000000-0000-0000-0000-000000000001')}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-full btn-spatial-primary text-xs font-semibold text-white shadow-lg"
+              onClick={handleSwitchToAdmin}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-full btn-spatial-primary text-xs font-semibold text-white shadow-lg cursor-pointer"
             >
               <UserCheck className="w-3.5 h-3.5" />
               <span>Switch to Admin & Review</span>

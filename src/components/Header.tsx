@@ -13,12 +13,14 @@ import { notificationService } from '../services/notificationService';
 interface HeaderProps {
   onOpenSupabaseModal?: () => void;
   onOpenRegisterModal: () => void;
+  onSelectTab?: (tab: any) => void;
   notifications: NotificationItem[];
   onRefreshNotifications: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   onOpenRegisterModal,
+  onSelectTab,
   notifications,
   onRefreshNotifications,
 }) => {
@@ -115,6 +117,9 @@ export const Header: React.FC<HeaderProps> = ({
                       onClick={async () => {
                         await notificationService.markAsRead(n.id);
                         onRefreshNotifications();
+                        if (n.notification_type === 'approval' && onSelectTab) {
+                          onSelectTab('admin');
+                        }
                       }}
                       className={`p-2.5 rounded-xl cursor-pointer text-xs transition-colors border ${
                         n.is_read
