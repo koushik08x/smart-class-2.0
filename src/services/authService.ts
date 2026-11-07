@@ -116,7 +116,7 @@ export const authService = {
       semester: data.semester,
       section: data.section,
       approval_status: 'pending', // MUST initially be pending
-      avatar_url: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(data.fullName)}`,
+      avatar_url: undefined,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };

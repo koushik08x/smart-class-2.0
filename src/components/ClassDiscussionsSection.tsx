@@ -16,6 +16,7 @@ import {
   X,
   ShieldCheck,
 } from 'lucide-react';
+import { UserAvatar } from './UserAvatar';
 
 export const ClassDiscussionsSection: React.FC = () => {
   const { user } = useAuth();
@@ -200,10 +201,7 @@ export const ClassDiscussionsSection: React.FC = () => {
 
                   <div className="flex items-start justify-between gap-3 mb-2">
                     <div className="flex items-center gap-2.5">
-                      <img
-                        src={d.author_avatar || 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150'}
-                        className="w-7 h-7 rounded-xl object-cover ring-1 ring-white/20"
-                      />
+                      <UserAvatar name={d.author_name} role={d.author_role} size="sm" />
                       <div>
                         <span className="text-xs font-semibold text-white">{d.author_name}</span>
                         <span className="text-[10px] font-mono text-slate-400 ml-1.5 capitalize">
@@ -271,10 +269,7 @@ export const ClassDiscussionsSection: React.FC = () => {
             <div className="overflow-y-auto pr-1 space-y-4 flex-1">
               <div className="flex items-start justify-between pb-3 border-b border-white/10">
                 <div className="flex items-center gap-2.5">
-                  <img
-                    src={activeDiscussion.author_avatar || 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150'}
-                    className="w-9 h-9 rounded-2xl object-cover ring-1 ring-white/20"
-                  />
+                  <UserAvatar name={activeDiscussion.author_name} role={activeDiscussion.author_role} size="md" />
                   <div>
                     <h4 className="text-sm font-bold text-white leading-tight">{activeDiscussion.author_name}</h4>
                     <span className="text-[10px] font-mono text-[#06B6D4] capitalize">

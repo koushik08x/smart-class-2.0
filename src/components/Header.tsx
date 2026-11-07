@@ -7,6 +7,7 @@ import {
   LogOut,
   UserPlus,
 } from 'lucide-react';
+import { UserAvatar } from './UserAvatar';
 import { NotificationItem } from '../types';
 import { notificationService } from '../services/notificationService';
 
@@ -148,11 +149,7 @@ export const Header: React.FC<HeaderProps> = ({
             onClick={() => setShowUserMenu(!showUserMenu)}
             className="flex items-center gap-2.5 p-1.5 sm:px-3 sm:py-1.5 rounded-2xl btn-spatial-secondary border border-white/10 hover:border-white/20 transition-all"
           >
-            <img
-              src={user?.avatar_url || 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150'}
-              alt={user?.full_name || 'User'}
-              className="w-7 h-7 rounded-xl object-cover ring-1 ring-white/20"
-            />
+            <UserAvatar name={user?.full_name} role={user?.role} size="sm" />
             <div className="text-left hidden md:block">
               <div className="text-xs font-semibold text-white truncate max-w-[120px]">{user?.full_name}</div>
               <div className="flex items-center gap-1.5">
@@ -195,7 +192,7 @@ export const Header: React.FC<HeaderProps> = ({
                       }`}
                     >
                       <div className="flex items-center gap-2 text-left truncate">
-                        <img src={u.avatar_url} className="w-6 h-6 rounded-lg object-cover" />
+                        <UserAvatar name={u.full_name} role={u.role} size="xs" />
                         <div className="truncate">
                           <p className="truncate text-xs font-semibold text-white">{u.full_name}</p>
                           <p className="text-[10px] text-slate-400 font-mono capitalize">

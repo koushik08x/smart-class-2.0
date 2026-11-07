@@ -18,6 +18,7 @@ import {
   AlertCircle,
   UserPlus,
 } from 'lucide-react';
+import { UserAvatar } from './UserAvatar';
 
 export const AdminDashboardSection: React.FC<{ onOpenBackendConsole?: () => void }> = ({
   onOpenBackendConsole,
@@ -146,10 +147,7 @@ export const AdminDashboardSection: React.FC<{ onOpenBackendConsole?: () => void
                 className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs"
               >
                 <div className="flex items-center gap-3">
-                  <img
-                    src={req.profile?.avatar_url || 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150'}
-                    className="w-10 h-10 rounded-2xl object-cover ring-1 ring-amber-400/40"
-                  />
+                  <UserAvatar name={req.profile?.full_name} role={req.requested_role} size="lg" />
                   <div>
                     <div className="flex items-center gap-2">
                       <p className="font-bold text-white text-sm">{req.profile?.full_name}</p>

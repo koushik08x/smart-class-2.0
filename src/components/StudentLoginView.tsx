@@ -12,6 +12,7 @@ import {
   CheckCircle2,
   UserPlus,
 } from 'lucide-react';
+import { UserAvatar } from './UserAvatar';
 
 interface StudentLoginViewProps {
   onOpenRegister: () => void;
@@ -253,11 +254,7 @@ export const StudentLoginView: React.FC<StudentLoginViewProps> = ({ onOpenRegist
                   onClick={() => handleQuickLogin(prof.student_id || prof.email)}
                   className="flex items-center gap-2 p-2 rounded-xl bg-white/[0.03] border border-white/10 hover:border-[#06B6D4]/50 hover:bg-[#06B6D4]/10 transition-all text-left group"
                 >
-                  <img
-                    src={prof.avatar_url || 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150'}
-                    alt={prof.full_name}
-                    className="w-7 h-7 rounded-lg object-cover ring-1 ring-white/10 shrink-0"
-                  />
+                  <UserAvatar name={prof.full_name} role={prof.role} size="sm" />
                   <div className="truncate">
                     <p className="text-xs font-semibold text-white group-hover:text-[#acedff] truncate">
                       {prof.full_name}
