@@ -1,30 +1,24 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { isSupabaseConfigured } from '../lib/supabase';
 import {
   Bell,
-  Database,
   ChevronDown,
   Sparkles,
-  ShieldAlert,
-  UserCheck,
-  GraduationCap,
-  Briefcase,
   LogOut,
   UserPlus,
+  Download,
 } from 'lucide-react';
 import { NotificationItem } from '../types';
 import { notificationService } from '../services/notificationService';
 
 interface HeaderProps {
-  onOpenSupabaseModal: () => void;
+  onOpenSupabaseModal?: () => void;
   onOpenRegisterModal: () => void;
   notifications: NotificationItem[];
   onRefreshNotifications: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
-  onOpenSupabaseModal,
   onOpenRegisterModal,
   notifications,
   onRefreshNotifications,
@@ -77,18 +71,16 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Control Nodes */}
       <div className="flex items-center gap-2.5 sm:gap-3.5">
-        {/* Supabase Status Button */}
-        <button
-          onClick={onOpenSupabaseModal}
-          title="Supabase Database Status & Migrations"
-          className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium btn-spatial-secondary border border-white/10 text-slate-300 hover:text-white"
+        {/* Export Code ZIP Button */}
+        <a
+          href="/smart-classroom-2.0.zip"
+          download="smart-classroom-2.0.zip"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-gradient-to-r from-[#8B5CF6] to-[#06B6D4] text-white shadow-[0_0_15px_rgba(6,182,212,0.4)] hover:brightness-110 transition-all cursor-pointer"
+          title="Download Complete Source Code ZIP"
         >
-          <div className={`w-2 h-2 rounded-full ${isSupabaseConfigured ? 'bg-emerald-400 shadow-[0_0_8px_#34d399]' : 'bg-[#06B6D4] shadow-[0_0_8px_#06b6d4]'}`} />
-          <Database className="w-3.5 h-3.5 text-[#06B6D4]" />
-          <span className="hidden md:inline font-mono">
-            {isSupabaseConfigured ? 'Supabase Connected' : 'Supabase (Sync Active)'}
-          </span>
-        </button>
+          <Download className="w-3.5 h-3.5" />
+          <span className="font-semibold">Export Code ZIP</span>
+        </a>
 
         {/* Notifications Bell */}
         <div className="relative">
@@ -157,7 +149,7 @@ export const Header: React.FC<HeaderProps> = ({
           )}
         </div>
 
-        {/* User Account Switcher Dropdown */}
+        {/* User Account Menu / Switcher */}
         <div className="relative">
           <button
             onClick={() => setShowUserMenu(!showUserMenu)}
@@ -172,7 +164,7 @@ export const Header: React.FC<HeaderProps> = ({
               <div className="text-xs font-semibold text-white truncate max-w-[120px]">{user?.full_name}</div>
               <div className="flex items-center gap-1.5">
                 <span className={`text-[9px] font-mono px-1.5 py-0.2 rounded ${roleInfo.bg} border`}>
-                  {roleInfo.label}
+                  {user?.student_id || roleInfo.label}
                 </span>
                 {user?.approval_status === 'pending' && (
                   <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
@@ -188,8 +180,8 @@ export const Header: React.FC<HeaderProps> = ({
           {showUserMenu && (
             <div className="absolute right-0 mt-2 w-72 rounded-2xl glass-modal p-3 border border-white/15 z-50 shadow-2xl">
               <div className="px-2 py-2 border-b border-white/10 mb-2">
-                <p className="text-[11px] font-mono uppercase tracking-wider text-slate-400">Switch Role / Demo Account</p>
-                <p className="text-xs text-slate-300 mt-0.5">Test role-based access control & security policies instantly:</p>
+                <p className="text-[11px] font-mono uppercase tracking-wider text-slate-400">Account Switcher</p>
+                <p className="text-xs text-slate-300 mt-0.5">Switch between student or faculty accounts:</p>
               </div>
 
               <div className="space-y-1 max-h-64 overflow-y-auto">
@@ -237,17 +229,17 @@ export const Header: React.FC<HeaderProps> = ({
                   className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs text-[#06B6D4] hover:bg-[#06B6D4]/10 transition-colors"
                 >
                   <UserPlus className="w-3.5 h-3.5" />
-                  <span>Register New Account</span>
+                  <span>Register New Student ID</span>
                 </button>
                 <button
                   onClick={() => {
                     setShowUserMenu(false);
                     logout();
                   }}
-                  className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs text-rose-400 hover:bg-rose-500/10 transition-colors"
+                  className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs text-rose-400 hover:bg-rose-500/10 transition-colors font-medium"
                 >
                   <LogOut className="w-3.5 h-3.5" />
-                  <span>Reset to Default Student</span>
+                  <span>Log Out ({user?.student_id || 'Account'})</span>
                 </button>
               </div>
             </div>

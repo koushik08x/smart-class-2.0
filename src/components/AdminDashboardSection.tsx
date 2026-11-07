@@ -19,7 +19,9 @@ import {
   UserPlus,
 } from 'lucide-react';
 
-export const AdminDashboardSection: React.FC = () => {
+export const AdminDashboardSection: React.FC<{ onOpenBackendConsole?: () => void }> = ({
+  onOpenBackendConsole,
+}) => {
   const { user, isAdmin, isFaculty } = useAuth();
   const [stats, setStats] = useState<any>(null);
   const [requests, setRequests] = useState<RegistrationRequest[]>([]);
@@ -68,9 +70,20 @@ export const AdminDashboardSection: React.FC = () => {
           </h2>
         </div>
 
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#8B5CF6]/15 border border-[#8B5CF6]/30 text-[#d0bcff] text-xs font-mono">
-          <ShieldCheck className="w-4 h-4 text-[#06B6D4]" />
-          <span>Role: {user?.role.toUpperCase()}</span>
+        <div className="flex items-center gap-2.5">
+          {onOpenBackendConsole && isAdmin && (
+            <button
+              onClick={onOpenBackendConsole}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full btn-spatial-secondary border border-[#06B6D4]/30 text-[#acedff] text-xs font-mono hover:bg-[#06B6D4]/10 transition-all cursor-pointer"
+            >
+              <span className="w-2 h-2 rounded-full bg-[#06B6D4] animate-pulse" />
+              <span>Backend Console</span>
+            </button>
+          )}
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#8B5CF6]/15 border border-[#8B5CF6]/30 text-[#d0bcff] text-xs font-mono">
+            <ShieldCheck className="w-4 h-4 text-[#06B6D4]" />
+            <span>Role: {user?.role.toUpperCase()}</span>
+          </div>
         </div>
       </div>
 

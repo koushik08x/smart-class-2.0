@@ -14,6 +14,7 @@ interface AuthContextType {
   isFaculty: boolean;
   isStudent: boolean;
   isApproved: boolean;
+  login: (identifier: string, password?: string) => Promise<{ user?: UserProfile; error?: string }>;
   switchUser: (userId: string) => Promise<void>;
   register: (data: {
     fullName: string;
@@ -46,6 +47,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (active) {
         const notifs = await notificationService.getNotifications(active.id);
         setUnreadCount(notifs.filter((n) => !n.is_read).length);
+      } else {
+        setUnreadCount(0);
       }
     } finally {
       setIsLoading(false);
@@ -55,12 +58,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     loadActiveUser();
 
-    const unsubAuth = realtimeBus.subscribe('auth_state_change', (profile: UserProfile) => {
+    const unsubAuth = realtimeBus.subscribe('auth_state_change', (profile: UserProfile | null) => {
       setUser(profile);
       setAvailableUsers([...dbStore.profiles]);
-      notificationService.getNotifications(profile.id).then((notifs) => {
-        setUnreadCount(notifs.filter((n) => !n.is_read).length);
-      });
+      if (profile) {
+        notificationService.getNotifications(profile.id).then((notifs) => {
+          setUnreadCount(notifs.filter((n) => !n.is_read).length);
+        });
+      } else {
+        setUnreadCount(0);
+      }
     });
 
     const unsubProfile = realtimeBus.subscribe('profile_updated', () => {
@@ -87,6 +94,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  const handleLogin = async (identifier: string, password?: string) => {
+    const res = await authService.login(identifier, password);
+    if (res.user) {
+      setUser(res.user);
+      setAvailableUsers([...dbStore.profiles]);
+      const notifs = await notificationService.getNotifications(res.user.id);
+      setUnreadCount(notifs.filter((n) => !n.is_read).length);
+    }
+    return res;
+  };
+
   const handleSwitchUser = async (userId: string) => {
     const switched = await authService.switchUser(userId);
     setUser(switched);
@@ -105,7 +123,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const handleLogout = async () => {
     await authService.logout();
-    await loadActiveUser();
+    setUser(null);
+    setUnreadCount(0);
   };
 
   const refreshProfile = async () => {
@@ -128,6 +147,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isFaculty,
         isStudent,
         isApproved,
+        login: handleLogin,
         switchUser: handleSwitchUser,
         register: handleRegister,
         logout: handleLogout,

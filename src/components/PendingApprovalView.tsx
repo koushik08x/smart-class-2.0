@@ -60,9 +60,10 @@ export const PendingApprovalView: React.FC = () => {
             </button>
             <button
               onClick={logout}
-              className="px-4 py-2 rounded-full btn-spatial-secondary text-xs text-slate-300 hover:text-white"
+              className="px-4 py-2 rounded-full btn-spatial-secondary text-xs text-slate-300 hover:text-white flex items-center gap-1.5"
             >
-              Back to Default Student
+              <LogOut className="w-3.5 h-3.5 text-rose-400" />
+              <span>Log Out to Login Screen</span>
             </button>
           </div>
         </div>

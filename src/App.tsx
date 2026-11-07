@@ -13,11 +13,12 @@ import { AdminDashboardSection } from './components/AdminDashboardSection';
 import { PendingApprovalView } from './components/PendingApprovalView';
 import { SupabaseInfoModal } from './components/SupabaseInfoModal';
 import { RegistrationModal } from './components/RegistrationModal';
+import { StudentLoginView } from './components/StudentLoginView';
 import { notificationService } from './services/notificationService';
 import { NotificationItem } from './types';
 
 function DashboardContent() {
-  const { user, isApproved, isAdmin, isFaculty } = useAuth();
+  const { user, isApproved, isAdmin, isFaculty, isLoading } = useAuth();
   const [activeTab, setActiveTab] = useState<DashboardTab>('timetable');
   const [showSupabaseModal, setShowSupabaseModal] = useState(false);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
@@ -40,6 +41,30 @@ function DashboardContent() {
     }
   }, [isAdmin, isFaculty, activeTab]);
 
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#070913] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 border-2 border-[#8B5CF6] border-t-transparent rounded-full animate-spin" />
+          <p className="text-xs font-mono text-slate-400">Loading SmartClassroom 2.0...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If no user is logged in, show the Student Login Portal
+  if (!user) {
+    return (
+      <>
+        <StudentLoginView onOpenRegister={() => setShowRegisterModal(true)} />
+        {showRegisterModal && (
+          <RegistrationModal onClose={() => setShowRegisterModal(false)} />
+        )}
+      </>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#070913] text-[#e1e1f1] relative selection:bg-[#8B5CF6]/30 selection:text-[#acedff] flex flex-col justify-between">
       {/* Vision Lumina Multi-Point Cosmic Glow Backdrops */}
@@ -59,9 +84,8 @@ function DashboardContent() {
       </div>
 
       <div className="relative z-10 flex-1 flex flex-col">
-        {/* Spatial Top Header */}
+        {/* Spatial Top Header - backend console hidden from main header */}
         <Header
-          onOpenSupabaseModal={() => setShowSupabaseModal(true)}
           onOpenRegisterModal={() => setShowRegisterModal(true)}
           notifications={notifications}
           onRefreshNotifications={loadNotifications}
@@ -82,7 +106,9 @@ function DashboardContent() {
               {activeTab === 'attendance' && <AttendanceSection />}
               {activeTab === 'quizzes' && <DailyQuizzesSection />}
               {activeTab === 'discussions' && <ClassDiscussionsSection />}
-              {activeTab === 'admin' && (isAdmin || isFaculty) && <AdminDashboardSection />}
+              {activeTab === 'admin' && (isAdmin || isFaculty) && (
+                <AdminDashboardSection onOpenBackendConsole={() => setShowSupabaseModal(true)} />
+              )}
             </div>
           )}
         </main>
@@ -93,7 +119,7 @@ function DashboardContent() {
         <FloatingHUD activeTab={activeTab} onTabChange={setActiveTab} />
       )}
 
-      {/* Supabase Status & Architecture Modal */}
+      {/* Backend Console Modal - only opened by authorized admin from Admin Deck */}
       {showSupabaseModal && (
         <SupabaseInfoModal onClose={() => setShowSupabaseModal(false)} />
       )}

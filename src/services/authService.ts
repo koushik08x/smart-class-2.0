@@ -5,7 +5,10 @@ import { UserProfile, UserRole } from '../types';
 export const authService = {
   // Get active session user
   async getCurrentProfile(userId?: string): Promise<UserProfile | null> {
-    const targetId = userId || localStorage.getItem('sc2_active_user_id') || '00000000-0000-0000-0000-000000000010';
+    const targetId = userId || localStorage.getItem('sc2_active_user_id');
+    if (!targetId) {
+      return null;
+    }
 
     if (isSupabaseConfigured) {
       try {
@@ -22,7 +25,53 @@ export const authService = {
     }
 
     const local = dbStore.profiles.find((p) => p.id === targetId);
-    return local || dbStore.profiles[4]; // Default to Aarav Sharma (student)
+    return local || null;
+  },
+
+  // Log in with Student Roll ID, Faculty ID, or University Email
+  async login(identifier: string, _password?: string): Promise<{ user?: UserProfile; error?: string }> {
+    const cleanId = identifier.trim().toLowerCase();
+    if (!cleanId) {
+      return { error: 'Please enter your Student Roll ID or institutional email.' };
+    }
+
+    // Check local database profiles first
+    let profile = dbStore.profiles.find(
+      (p) =>
+        p.student_id?.toLowerCase() === cleanId ||
+        p.email.toLowerCase() === cleanId
+    );
+
+    // If Supabase is configured and not found in local memory, check remote database
+    if (!profile && isSupabaseConfigured) {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .or(`student_id.ilike.${cleanId},email.ilike.${cleanId}`)
+          .maybeSingle();
+
+        if (data && !error) {
+          profile = data as UserProfile;
+          if (!dbStore.profiles.some((p) => p.id === profile!.id)) {
+            dbStore.profiles.push(profile);
+            dbStore.persist();
+          }
+        }
+      } catch (err) {
+        console.warn('Supabase login lookup error:', err);
+      }
+    }
+
+    if (!profile) {
+      return {
+        error: `No account found for Student Roll ID or Email "${identifier}". Please check your ID or register a new student account.`,
+      };
+    }
+
+    localStorage.setItem('sc2_active_user_id', profile.id);
+    realtimeBus.emit('auth_state_change', profile);
+    return { user: profile };
   },
 
   // Switch between demo accounts or registered user
@@ -48,9 +97,13 @@ export const authService = {
     const newId = `usr-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
     
     // Check if email already exists
-    const existing = dbStore.profiles.find((p) => p.email.toLowerCase() === data.email.toLowerCase());
+    const existing = dbStore.profiles.find(
+      (p) =>
+        p.email.toLowerCase() === data.email.toLowerCase() ||
+        (data.studentId && p.student_id?.toLowerCase() === data.studentId.toLowerCase())
+    );
     if (existing) {
-      return { user: existing, error: 'An account with this email already exists' };
+      return { user: existing, error: 'An account with this email or Student Roll ID already exists' };
     }
 
     const newProfile: UserProfile = {
@@ -58,7 +111,7 @@ export const authService = {
       full_name: data.fullName,
       email: data.email,
       role: data.role,
-      student_id: data.studentId || `ID-${Math.floor(1000 + Math.random() * 9000)}`,
+      student_id: data.studentId || `26CS${Math.floor(1000 + Math.random() * 9000)}`,
       department: data.department,
       semester: data.semester,
       section: data.section,
@@ -117,7 +170,7 @@ export const authService = {
       id: `notif-${Date.now()}`,
       user_id: '00000000-0000-0000-0000-000000000001', // Super Admin
       title: 'New Account Pending Approval',
-      message: `${data.fullName} has registered as ${data.role}. Please review the registration.`,
+      message: `${data.fullName} has registered as ${data.role} (${newProfile.student_id}). Please review the registration.`,
       notification_type: 'approval',
       related_id: newProfile.id,
       is_read: false,
@@ -131,7 +184,7 @@ export const authService = {
     return { user: newProfile };
   },
 
-  // Sign out
+  // Sign out - completely clears user session and returns to login view
   async logout(): Promise<void> {
     if (isSupabaseConfigured) {
       try {
@@ -140,10 +193,8 @@ export const authService = {
         console.warn('Supabase sign out error:', err);
       }
     }
-    // Set to default demo student
-    const defaultStudent = dbStore.profiles[4];
-    localStorage.setItem('sc2_active_user_id', defaultStudent.id);
-    realtimeBus.emit('auth_state_change', defaultStudent);
+    localStorage.removeItem('sc2_active_user_id');
+    realtimeBus.emit('auth_state_change', null);
   },
 
   // Reset password simulation
