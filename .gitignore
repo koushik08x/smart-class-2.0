@@ -7,3 +7,4 @@ coverage/
 .env*
 !.env.example
 push_to_github.sh
+package-lock.json
