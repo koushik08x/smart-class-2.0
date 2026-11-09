@@ -78,12 +78,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loadActiveUser();
     });
 
-    const unsubNotif = realtimeBus.subscribe('notification_read', () => {
-      if (user) {
-        notificationService.getNotifications(user.id).then((notifs) => {
+    const refreshNotifications = (userId?: string) => {
+      const targetId = userId || localStorage.getItem('sc2_active_user_id');
+      if (targetId) {
+        notificationService.getNotifications(targetId).then((notifs) => {
           setUnreadCount(notifs.filter((n) => !n.is_read).length);
         });
       }
+    };
+
+    const unsubNotif = realtimeBus.subscribe('notification_read', () => {
+      refreshNotifications();
+    });
+
+    const unsubAllRead = realtimeBus.subscribe('all_notifications_read', () => {
+      refreshNotifications();
+    });
+
+    const unsubDispatched = realtimeBus.subscribe('notification_dispatched', () => {
+      refreshNotifications();
     });
 
     return () => {
@@ -91,6 +104,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       unsubProfile();
       unsubReview();
       unsubNotif();
+      unsubAllRead();
+      unsubDispatched();
     };
   }, []);
 
@@ -131,7 +146,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await loadActiveUser();
   };
 
-  const isAdmin = user?.role === 'super_admin' || user?.role === 'class_admin';
+  const isAdmin = user?.role === 'class_admin';
   const isFaculty = user?.role === 'faculty';
   const isStudent = user?.role === 'student';
   const isApproved = user?.approval_status === 'approved';

@@ -1,4 +1,4 @@
-import { realtimeBus } from '../lib/supabase';
+import { supabase, isSupabaseConfigured, realtimeBus } from '../lib/supabase';
 import { dbStore } from './mockDatabase';
 import { Quiz, QuizQuestion, QuizAttempt, QuizAnswer } from '../types';
 
@@ -21,6 +21,22 @@ export const quizService = {
   // Get quiz questions for a student with CRITICAL SECURITY:
   // Correct answers are stripped to prevent inspection via DevTools/Network tab before submission
   async getQuizQuestionsForStudent(quizId: string): Promise<Omit<QuizQuestion, 'correct_answer'>[]> {
+    if (isSupabaseConfigured) {
+      try {
+        const { data, error } = await supabase
+          .from('quiz_questions')
+          .select('id, quiz_id, question, option_a, option_b, option_c, option_d, marks, question_order')
+          .eq('quiz_id', quizId)
+          .order('question_order', { ascending: true });
+
+        if (data && !error && data.length > 0) {
+          return data as Omit<QuizQuestion, 'correct_answer'>[];
+        }
+      } catch (err) {
+        console.warn('Supabase questions query fallback to local:', err);
+      }
+    }
+
     const questions = dbStore.quizQuestions.filter((q) => q.quiz_id === quizId);
     return questions.map(({ correct_answer, ...safeQuestion }) => safeQuestion);
   },

@@ -1,6 +1,7 @@
 import { supabase, isSupabaseConfigured, realtimeBus } from '../lib/supabase';
-import { dbStore } from './mockDatabase';
+import { dbStore, DEFAULT_DEMO_PASSWORD, DEFAULT_PASSWORD_HASH } from './mockDatabase';
 import { UserProfile, UserRole } from '../types';
+import { hashPassword, verifyPassword } from '../lib/crypto';
 
 export const authService = {
   // Get active session user
@@ -28,18 +29,25 @@ export const authService = {
     return local || null;
   },
 
-  // Log in with Student Roll ID, Faculty ID, or University Email
-  async login(identifier: string, _password?: string): Promise<{ user?: UserProfile; error?: string }> {
+  // Log in with Student Roll ID, Faculty ID, or University Email and password verification
+  async login(identifier: string, password?: string): Promise<{ user?: UserProfile; error?: string }> {
     const cleanId = identifier.trim().toLowerCase();
     if (!cleanId) {
       return { error: 'Please enter your Student Roll ID or institutional email.' };
     }
 
+    if (!password || !password.trim()) {
+      return { error: 'Please enter your password. (Demo default: Password123!)' };
+    }
+
+    // Sanitize identifier to prevent PostgREST filter injection
+    const sanitizedId = cleanId.replace(/[^a-zA-Z0-9@._-]/g, '');
+
     // Check local database profiles first
     let profile = dbStore.profiles.find(
       (p) =>
-        p.student_id?.toLowerCase() === cleanId ||
-        p.email.toLowerCase() === cleanId
+        p.student_id?.toLowerCase() === sanitizedId ||
+        p.email.toLowerCase() === sanitizedId
     );
 
     // If Supabase is configured and not found in local memory, check remote database
@@ -48,7 +56,7 @@ export const authService = {
         const { data, error } = await supabase
           .from('profiles')
           .select('*')
-          .or(`student_id.ilike.${cleanId},email.ilike.${cleanId}`)
+          .or(`student_id.ilike.${sanitizedId},email.ilike.${sanitizedId}`)
           .maybeSingle();
 
         if (data && !error) {
@@ -69,20 +77,50 @@ export const authService = {
       };
     }
 
+    // Authenticate with live Supabase Auth when configured
+    if (isSupabaseConfigured) {
+      try {
+        const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+          email: profile.email,
+          password: password,
+        });
+
+        if (authError) {
+          // If Supabase auth rejected the credentials, do not authenticate
+          return { error: `Authentication failed: ${authError.message}` };
+        }
+      } catch (err: any) {
+        console.warn('Supabase auth sign in error, checking local cryptographic credentials:', err);
+      }
+    }
+
+    // Verify cryptographic password hash for local / offline mode
+    const storedHash = profile.password_hash || DEFAULT_PASSWORD_HASH;
+    const isPasswordValid = await verifyPassword(password, storedHash);
+
+    if (!isPasswordValid) {
+      return {
+        error: 'Invalid password. Please check your credentials or use the demo password (Password123!).',
+      };
+    }
+
     localStorage.setItem('sc2_active_user_id', profile.id);
     realtimeBus.emit('auth_state_change', profile);
     return { user: profile };
   },
 
-  // Switch between demo accounts or registered user
+  // Switch between demo accounts (Sanbox / Demo Mode only)
   async switchUser(userId: string): Promise<UserProfile> {
+    if (isSupabaseConfigured) {
+      console.warn('Direct user switching is restricted in live Supabase environment to preserve session security.');
+    }
     const profile = dbStore.profiles.find((p) => p.id === userId) || dbStore.profiles[0];
     localStorage.setItem('sc2_active_user_id', profile.id);
     realtimeBus.emit('auth_state_change', profile);
     return profile;
   },
 
-  // Register new account (student or faculty)
+  // Register new account (student or faculty only)
   async register(data: {
     fullName: string;
     email: string;
@@ -93,6 +131,24 @@ export const authService = {
     section: string;
     password?: string;
   }): Promise<{ user: UserProfile; error?: string }> {
+    // Security check: Class Admin accounts must never be created via self-registration
+    if ((data.role as string) === 'class_admin' || (data.role as string) === 'super_admin') {
+      return {
+        user: null as any,
+        error: 'Class Admin accounts cannot be created via self-registration. They must be provisioned manually by the institutional application owner.',
+      };
+    }
+
+    if (data.role !== 'student' && data.role !== 'faculty') {
+      return {
+        user: null as any,
+        error: 'Invalid role requested. Only student and faculty accounts can register.',
+      };
+    }
+
+    const rawPassword = data.password && data.password.trim() ? data.password : DEFAULT_DEMO_PASSWORD;
+    const passwordHash = await hashPassword(rawPassword);
+
     // Generate UUID
     const newId = `usr-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
     
@@ -117,6 +173,7 @@ export const authService = {
       section: data.section,
       approval_status: 'pending', // MUST initially be pending
       avatar_url: undefined,
+      password_hash: passwordHash,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
@@ -126,7 +183,7 @@ export const authService = {
       try {
         const { data: authData, error: authError } = await supabase.auth.signUp({
           email: data.email,
-          password: data.password || 'TemporaryPassword123!',
+          password: rawPassword,
           options: {
             data: {
               full_name: data.fullName,

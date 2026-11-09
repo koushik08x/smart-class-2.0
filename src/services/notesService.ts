@@ -2,6 +2,7 @@ import { supabase, isSupabaseConfigured, realtimeBus } from '../lib/supabase';
 import { dbStore } from './mockDatabase';
 import { StudyNote } from '../types';
 import { storageService } from './storageService';
+import { notificationService } from './notificationService';
 
 export const notesService = {
   // Fetch notes with optional subject filter
@@ -106,20 +107,14 @@ export const notesService = {
 
     realtimeBus.emit('note_uploaded', newNote);
 
-    // Notify students
-    for (const student of dbStore.profiles.filter((p) => p.role === 'student')) {
-      dbStore.notifications.push({
-        id: `notif-${Date.now()}-${student.id.substring(0, 4)}`,
-        user_id: student.id,
-        title: `New Material: ${data.title}`,
-        message: `${data.authorName} uploaded notes for ${subject?.subject_code || 'class'}.`,
-        notification_type: 'notes',
-        related_id: newNote.id,
-        is_read: false,
-        created_at: new Date().toISOString(),
-      });
-    }
-    dbStore.persist();
+    // Automatically notify all students in section using central academic notification engine
+    await notificationService.dispatchAcademicNotification({
+      title: `New Material: ${data.title}`,
+      message: `${data.authorName} uploaded new courseware for ${subject?.subject_code || 'class'}.`,
+      notificationType: 'notes',
+      relatedId: newNote.id,
+      targetSection: '1CSE22',
+    });
 
     return { note: newNote };
   },

@@ -3,11 +3,22 @@
  * Aligned with PostgreSQL Database Schema & Supabase Data Model
  */
 
-export type UserRole = 'super_admin' | 'class_admin' | 'faculty' | 'student';
+export type UserRole = 'class_admin' | 'faculty' | 'student';
 export type ApprovalStatus = 'pending' | 'approved' | 'rejected';
 export type AttendanceStatus = 'present' | 'absent' | 'excused';
 export type AnnouncementPriority = 'low' | 'normal' | 'high' | 'urgent';
 export type SubmissionStatus = 'submitted' | 'graded' | 'late' | 'resubmitted';
+
+export type DashboardTab =
+  | 'timetable'
+  | 'announcements'
+  | 'notes'
+  | 'assignments'
+  | 'attendance'
+  | 'quizzes'
+  | 'discussions'
+  | 'admin'
+  | 'faculty';
 
 export interface UserProfile {
   id: string;
@@ -20,6 +31,7 @@ export interface UserProfile {
   section: string;
   approval_status: ApprovalStatus;
   avatar_url?: string;
+  password_hash?: string;
   created_at: string;
   updated_at: string;
 }
@@ -256,12 +268,25 @@ export interface DiscussionReply {
   created_at: string;
 }
 
+export type NotificationType =
+  | 'announcement'
+  | 'notes'
+  | 'assignment'
+  | 'quiz'
+  | 'result'
+  | 'reply'
+  | 'approval'
+  | 'timetable'
+  | 'attendance'
+  | 'classroom'
+  | 'exam';
+
 export interface NotificationItem {
   id: string;
   user_id: string;
   title: string;
   message: string;
-  notification_type: 'announcement' | 'notes' | 'assignment' | 'quiz' | 'result' | 'reply' | 'approval';
+  notification_type: NotificationType;
   related_id?: string;
   is_read: boolean;
   created_at: string;

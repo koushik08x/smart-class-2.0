@@ -8,7 +8,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Define Enums
 DO $$ BEGIN
-  CREATE TYPE user_role AS ENUM ('super_admin', 'class_admin', 'faculty', 'student');
+  CREATE TYPE user_role AS ENUM ('class_admin', 'faculty', 'student');
 EXCEPTION
   WHEN duplicate_object THEN null;
 END $$;
@@ -295,12 +295,12 @@ $$ LANGUAGE sql STABLE SECURITY DEFINER;
 
 CREATE OR REPLACE FUNCTION public.is_admin()
 RETURNS BOOLEAN AS $$
-  SELECT role IN ('super_admin', 'class_admin') FROM public.profiles WHERE id = auth.uid();
+  SELECT role = 'class_admin' FROM public.profiles WHERE id = auth.uid();
 $$ LANGUAGE sql STABLE SECURITY DEFINER;
 
 CREATE OR REPLACE FUNCTION public.is_faculty_or_admin()
 RETURNS BOOLEAN AS $$
-  SELECT role IN ('super_admin', 'class_admin', 'faculty') FROM public.profiles WHERE id = auth.uid();
+  SELECT role IN ('class_admin', 'faculty') FROM public.profiles WHERE id = auth.uid();
 $$ LANGUAGE sql STABLE SECURITY DEFINER;
 
 -- Profiles Policies

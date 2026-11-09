@@ -1,6 +1,7 @@
 import { supabase, isSupabaseConfigured, realtimeBus } from '../lib/supabase';
 import { dbStore } from './mockDatabase';
 import { Announcement, AnnouncementPriority, UserRole } from '../types';
+import { notificationService } from './notificationService';
 
 export const announcementService = {
   // Fetch announcements (pinned first, then date descending)
@@ -88,26 +89,40 @@ export const announcementService = {
     // Broadcast realtime event
     realtimeBus.emit('announcement_created', newAnnouncement);
 
-    // Create notifications for all students
-    for (const student of dbStore.profiles.filter((p) => p.role === 'student')) {
-      dbStore.notifications.push({
-        id: `notif-${Date.now()}-${student.id.substring(0, 5)}`,
-        user_id: student.id,
-        title: `Notice: ${data.title}`,
-        message: data.description.substring(0, 100) + '...',
-        notification_type: 'announcement',
-        related_id: newAnnouncement.id,
-        is_read: false,
-        created_at: new Date().toISOString(),
-      });
-    }
-    dbStore.persist();
+    // Automatically notify relevant students using central academic notification engine
+    await notificationService.dispatchAcademicNotification({
+      title: `Notice: ${data.title}`,
+      message: data.description.substring(0, 120) + (data.description.length > 120 ? '...' : ''),
+      notificationType: 'announcement',
+      relatedId: newAnnouncement.id,
+      targetSection: data.targetSection || '1CSE22',
+    });
 
     return newAnnouncement;
   },
 
-  // Delete announcement
-  async deleteAnnouncement(announcementId: string): Promise<boolean> {
+  // Delete announcement (with author / admin authorization check)
+  async deleteAnnouncement(announcementId: string, currentUserId?: string, userRole?: UserRole): Promise<boolean> {
+    const announcement = dbStore.announcements.find((a) => a.id === announcementId);
+    if (!announcement) return false;
+
+    // Check authorization: must be author or class_admin
+    const isAdmin = userRole === 'class_admin';
+    const isAuthor = Boolean(currentUserId && announcement.author_id === currentUserId);
+
+    if (currentUserId && !isAdmin && !isAuthor) {
+      console.warn('Unauthorized delete attempt on announcement:', announcementId);
+      return false;
+    }
+
+    if (isSupabaseConfigured) {
+      try {
+        await supabase.from('announcements').delete().eq('id', announcementId);
+      } catch (err) {
+        console.warn('Supabase announcement delete error:', err);
+      }
+    }
+
     dbStore.announcements = dbStore.announcements.filter((a) => a.id !== announcementId);
     dbStore.persist();
     realtimeBus.emit('announcement_deleted', announcementId);

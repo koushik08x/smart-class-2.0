@@ -1,7 +1,8 @@
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { supabase, isSupabaseConfigured, realtimeBus } from '../lib/supabase';
 import { dbStore } from './mockDatabase';
 import { TimetableSlot } from '../types';
 import { TIMETABLE_DAYS, RAW_TIMETABLE_ENTRIES, TIME_SLOTS } from '../data/academicData';
+import { notificationService } from './notificationService';
 
 export const timetableService = {
   // Map standard weekday names or day numbers to 'Day 1' - 'Day 5'
@@ -151,5 +152,86 @@ export const timetableService = {
     }
 
     return result;
+  },
+
+  // Class Admin: Update classroom allocation for a slot and notify students
+  async updateClassroom(slotId: string, newClassroom: string, section: string = '1CSE22'): Promise<TimetableSlot | null> {
+    const slot = dbStore.timetable.find((t) => t.id === slotId);
+    if (!slot) return null;
+
+    const oldRoom = slot.classroom || 'Unassigned';
+    slot.classroom = newClassroom.trim();
+    dbStore.persist();
+
+    if (isSupabaseConfigured) {
+      try {
+        await supabase.from('timetable').update({ classroom: slot.classroom }).eq('id', slotId);
+      } catch (err) {
+        console.warn('Supabase classroom update error:', err);
+      }
+    }
+
+    realtimeBus.emit('timetable_updated', slot);
+
+    // Automatically notify all students in the section
+    await notificationService.dispatchAcademicNotification({
+      title: `Classroom Change: ${slot.subject_abbr || slot.subject_name}`,
+      message: `${slot.day_of_week} (${slot.start_time}-${slot.end_time}) relocated from ${oldRoom} to ${newClassroom}.`,
+      notificationType: 'classroom',
+      relatedId: slot.id,
+      targetSection: section,
+    });
+
+    return slot;
+  },
+
+  // Class Admin: Update slot schedule/timing and notify students
+  async updateTimetableSlot(
+    slotId: string,
+    updates: Partial<TimetableSlot>,
+    section: string = '1CSE22'
+  ): Promise<TimetableSlot | null> {
+    const slot = dbStore.timetable.find((t) => t.id === slotId);
+    if (!slot) return null;
+
+    Object.assign(slot, updates);
+    dbStore.persist();
+
+    if (isSupabaseConfigured) {
+      try {
+        await supabase.from('timetable').update(updates).eq('id', slotId);
+      } catch (err) {
+        console.warn('Supabase timetable update error:', err);
+      }
+    }
+
+    realtimeBus.emit('timetable_updated', slot);
+
+    // Automatically notify all students in the section
+    await notificationService.dispatchAcademicNotification({
+      title: `Timetable Updated: ${slot.subject_abbr || slot.subject_name}`,
+      message: `Schedule adjustment on ${slot.day_of_week} for ${slot.subject_name || slot.subject_abbr}. New hours: ${slot.start_time}-${slot.end_time}.`,
+      notificationType: 'timetable',
+      relatedId: slot.id,
+      targetSection: section,
+    });
+
+    return slot;
+  },
+
+  // Class Admin / Academic notice: Publish examination schedule update
+  async publishExamScheduleChange(data: {
+    title: string;
+    message: string;
+    section?: string;
+  }): Promise<void> {
+    const targetSection = data.section || '1CSE22';
+
+    await notificationService.dispatchAcademicNotification({
+      title: `Exam Schedule Alert: ${data.title}`,
+      message: data.message,
+      notificationType: 'exam',
+      targetSection,
+    });
   },
 };

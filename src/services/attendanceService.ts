@@ -1,6 +1,7 @@
 import { supabase, isSupabaseConfigured, realtimeBus } from '../lib/supabase';
 import { dbStore } from './mockDatabase';
 import { AttendanceTelemetry, AttendanceRecord, AttendanceSession, AttendanceStatus } from '../types';
+import { notificationService } from './notificationService';
 
 export const attendanceService = {
   // Calculate attendance telemetry for a student
@@ -201,6 +202,29 @@ export const attendanceService = {
 
     dbStore.persist();
     realtimeBus.emit('attendance_updated', newSession);
+
+    // Automatically notify relevant students using central academic notification engine
+    await notificationService.dispatchAcademicNotification({
+      title: `Attendance Updated: ${newSession.subject_code || newSession.subject_name}`,
+      message: `Attendance marked for session on ${newSession.class_date}. Check your telemetry.`,
+      notificationType: 'attendance',
+      relatedId: newSession.id,
+      targetSection: '1CSE22',
+    });
+
+    // Notify absent students individually
+    for (const r of data.records) {
+      if (r.status === 'absent') {
+        await notificationService.dispatchAcademicNotification({
+          title: `Attendance Alert: Absent in ${newSession.subject_code || newSession.subject_name}`,
+          message: `You were marked absent on ${newSession.class_date}. Ensure attendance remains >= 75%.`,
+          notificationType: 'attendance',
+          relatedId: `${newSession.id}-absent-${r.studentId}`,
+          targetStudentId: r.studentId,
+        });
+      }
+    }
+
     return newSession;
   }
 };

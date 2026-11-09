@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Header } from './components/Header';
+import { Sidebar } from './components/Sidebar';
 import { FloatingHUD, DashboardTab } from './components/FloatingHUD';
 import { TodayTimetableSection } from './components/TodayTimetableSection';
 import { AnnouncementsSection } from './components/AnnouncementsSection';
@@ -10,12 +11,14 @@ import { AttendanceSection } from './components/AttendanceSection';
 import { DailyQuizzesSection } from './components/DailyQuizzesSection';
 import { ClassDiscussionsSection } from './components/ClassDiscussionsSection';
 import { AdminDashboardSection } from './components/AdminDashboardSection';
+import { FacultyDashboardSection } from './components/FacultyDashboardSection';
 import { PendingApprovalView } from './components/PendingApprovalView';
 import { SupabaseInfoModal } from './components/SupabaseInfoModal';
 import { RegistrationModal } from './components/RegistrationModal';
 import { StudentLoginView } from './components/StudentLoginView';
 import { notificationService } from './services/notificationService';
 import { NotificationItem } from './types';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 function DashboardContent() {
   const { user, isApproved, isAdmin, isFaculty, isLoading } = useAuth();
@@ -23,6 +26,7 @@ function DashboardContent() {
   const [showSupabaseModal, setShowSupabaseModal] = useState(false);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const loadNotifications = () => {
     if (user) {
@@ -32,28 +36,62 @@ function DashboardContent() {
 
   useEffect(() => {
     loadNotifications();
+    if (user?.id) {
+      const unsubscribe = notificationService.subscribeToLiveNotifications(user.id, () => {
+        loadNotifications();
+      });
+      return () => unsubscribe();
+    }
   }, [user?.id]);
 
-  // If user switches away from admin tab when not authorized, reset to timetable
+  // Strict role guards: unauthorized tab access immediately redirects to timetable
   useEffect(() => {
-    if (activeTab === 'admin' && !isAdmin && !isFaculty) {
+    if (activeTab === 'admin' && user?.role !== 'class_admin') {
       setActiveTab('timetable');
     }
-  }, [isAdmin, isFaculty, activeTab]);
+    if (activeTab === 'faculty' && user?.role !== 'faculty') {
+      setActiveTab('timetable');
+    }
+  }, [user?.role, activeTab]);
+
+  const getTabTitle = (tab: DashboardTab): string => {
+    switch (tab) {
+      case 'timetable':
+        return 'Academic Timetable & Lecture Streams';
+      case 'announcements':
+        return 'Class Announcements & Broadcasts';
+      case 'notes':
+        return 'Study Materials & Course Repository';
+      case 'assignments':
+        return 'Assignments & Project Trackers';
+      case 'attendance':
+        return 'Biometric Attendance & Telemetry';
+      case 'quizzes':
+        return 'Daily Quizzes & Leaderboard';
+      case 'discussions':
+        return 'Class Discussions & Forum';
+      case 'admin':
+        return 'Class Administration Master Deck';
+      case 'faculty':
+        return 'Faculty Course Management Desk';
+      default:
+        return 'Academic Hub';
+    }
+  };
 
   // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#070913] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 border-2 border-[#8B5CF6] border-t-transparent rounded-full animate-spin" />
-          <p className="text-xs font-mono text-slate-400">Loading SmartClassroom 2.0...</p>
+      <div className="min-h-screen bg-[#F5F0E6] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3 p-8 rounded-3xl bg-white border border-[#E5DCCB] shadow-md">
+          <div className="w-10 h-10 border-3 border-[#C65D32] border-t-transparent rounded-full animate-spin" />
+          <p className="text-xs font-mono font-bold text-[#171717] tracking-wider uppercase">Loading SmartClassroom 2.0...</p>
         </div>
       </div>
     );
   }
 
-  // If no user is logged in, show the Student Login Portal
+  // If no user is logged in, show the redesigned Student Login Portal
   if (!user) {
     return (
       <>
@@ -66,39 +104,35 @@ function DashboardContent() {
   }
 
   return (
-    <div className="min-h-screen bg-[#070913] text-[#e1e1f1] relative selection:bg-[#8B5CF6]/30 selection:text-[#acedff] flex flex-col justify-between">
-      {/* Vision Lumina Multi-Point Cosmic Glow Backdrops */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <div className="absolute -top-[15%] left-[10%] w-[500px] h-[500px] rounded-full bg-[#8B5CF6]/12 blur-[120px]" />
-        <div className="absolute top-[35%] -right-[10%] w-[550px] h-[550px] rounded-full bg-[#06B6D4]/10 blur-[130px]" />
-        <div className="absolute -bottom-[10%] left-[25%] w-[600px] h-[600px] rounded-full bg-[#6366F1]/10 blur-[140px]" />
-        {/* Subtle grid pattern overlay */}
-        <div
-          className="absolute inset-0 opacity-[0.025]"
-          style={{
-            backgroundImage:
-              'radial-gradient(rgba(255, 255, 255, 0.4) 1px, transparent 1px)',
-            backgroundSize: '24px 24px',
-          }}
-        />
-      </div>
+    <div className="min-h-screen bg-[#F5F0E6] text-[#171717] flex">
+      {/* 30% INK-BLACK FULL-HEIGHT FIXED SIDEBAR */}
+      <Sidebar
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        onOpenRegisterModal={() => setShowRegisterModal(true)}
+        isOpenMobile={isMobileMenuOpen}
+        onCloseMobile={() => setIsMobileMenuOpen(false)}
+      />
 
-      <div className="relative z-10 flex-1 flex flex-col">
-        {/* Spatial Top Header - backend console hidden from main header */}
+      {/* 60% CREAM MAIN WORKSPACE */}
+      <div className="lg:pl-72 flex-1 flex flex-col min-h-screen w-full transition-all duration-300">
+        {/* Top Header Bar */}
         <Header
+          currentTabName={getTabTitle(activeTab)}
           onOpenRegisterModal={() => setShowRegisterModal(true)}
           onSelectTab={setActiveTab}
           notifications={notifications}
           onRefreshNotifications={loadNotifications}
+          onToggleMobileMenu={() => setIsMobileMenuOpen(true)}
         />
 
-        {/* Main Content Viewport */}
-        <main className="max-w-7xl w-full mx-auto px-4 sm:px-8 pt-6 pb-28 flex-1">
+        {/* Main Content Viewport on Warm Cream Foundation */}
+        <main className="max-w-7xl w-full mx-auto px-4 sm:px-8 py-8 flex-1 pb-28 lg:pb-12">
           {!isApproved ? (
             /* Protected Route Enforcing Approval Workflow */
             <PendingApprovalView onGoToAdmin={() => setActiveTab('admin')} />
           ) : (
-            /* Approved Classroom Hub */
+            /* Approved Classroom Workspace */
             <div className="animate-in fade-in duration-300">
               {activeTab === 'timetable' && <TodayTimetableSection />}
               {activeTab === 'announcements' && <AnnouncementsSection />}
@@ -107,20 +141,23 @@ function DashboardContent() {
               {activeTab === 'attendance' && <AttendanceSection />}
               {activeTab === 'quizzes' && <DailyQuizzesSection />}
               {activeTab === 'discussions' && <ClassDiscussionsSection />}
-              {activeTab === 'admin' && (isAdmin || isFaculty) && (
+              {activeTab === 'admin' && isAdmin && (
                 <AdminDashboardSection onOpenBackendConsole={() => setShowSupabaseModal(true)} />
+              )}
+              {activeTab === 'faculty' && isFaculty && (
+                <FacultyDashboardSection />
               )}
             </div>
           )}
         </main>
       </div>
 
-      {/* Floating Spatial HUD Navigation Bar */}
+      {/* Mobile Floating HUD */}
       {isApproved && (
         <FloatingHUD activeTab={activeTab} onTabChange={setActiveTab} />
       )}
 
-      {/* Backend Console Modal - only opened by authorized admin from Admin Deck */}
+      {/* Backend Console Modal */}
       {showSupabaseModal && (
         <SupabaseInfoModal onClose={() => setShowSupabaseModal(false)} />
       )}
@@ -135,8 +172,10 @@ function DashboardContent() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <DashboardContent />
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <DashboardContent />
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }

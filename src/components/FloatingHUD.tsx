@@ -11,15 +11,8 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-export type DashboardTab =
-  | 'timetable'
-  | 'announcements'
-  | 'notes'
-  | 'assignments'
-  | 'attendance'
-  | 'quizzes'
-  | 'discussions'
-  | 'admin';
+import { DashboardTab } from '../types';
+export type { DashboardTab };
 
 interface FloatingHUDProps {
   activeTab: DashboardTab;
@@ -39,12 +32,14 @@ export const FloatingHUD: React.FC<FloatingHUDProps> = ({ activeTab, onTabChange
     { id: 'discussions', label: 'Discussions', icon: MessagesSquare },
   ];
 
-  if (isAdmin || isFaculty) {
-    navItems.push({ id: 'admin', label: isAdmin ? 'Admin' : 'Faculty', icon: ShieldCheck });
+  if (isAdmin) {
+    navItems.push({ id: 'admin', label: 'Admin Portal', icon: ShieldCheck });
+  } else if (isFaculty) {
+    navItems.push({ id: 'faculty', label: 'Faculty Desk', icon: ShieldCheck });
   }
 
   return (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 max-w-[95vw] px-2 py-1.5 rounded-full glass-dock border border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.8),0_0_25px_rgba(139,92,246,0.25)] flex items-center gap-1 sm:gap-2">
+    <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 max-w-[95vw] px-2.5 py-1.5 rounded-full bg-[#171717]/95 backdrop-blur-md border border-[#2E2E2E] shadow-[0_15px_35px_rgba(23,23,23,0.35)] flex items-center gap-1 sm:gap-1.5 lg:hidden">
       {navItems.map((item) => {
         const Icon = item.icon;
         const isActive = activeTab === item.id;
@@ -53,17 +48,14 @@ export const FloatingHUD: React.FC<FloatingHUDProps> = ({ activeTab, onTabChange
           <button
             key={item.id}
             onClick={() => onTabChange(item.id)}
-            className={`relative flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2 rounded-full text-xs font-medium transition-all duration-300 ${
+            className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 ${
               isActive
-                ? 'bg-gradient-to-r from-[#8B5CF6] to-[#6366F1] text-white shadow-[0_0_20px_rgba(139,92,246,0.6)] scale-105'
-                : 'text-slate-400 hover:text-white hover:bg-white/[0.06]'
+                ? 'bg-[#C65D32] text-[#F5F0E6] shadow-[0_2px_10px_rgba(198,93,50,0.5)] scale-105'
+                : 'text-[#B3ADA3] hover:text-[#F5F0E6] hover:bg-white/5'
             }`}
           >
-            <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-400'}`} />
+            <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-[#F5F0E6]' : 'text-[#B3ADA3]'}`} />
             <span className={`${isActive ? 'inline' : 'hidden md:inline'}`}>{item.label}</span>
-            {isActive && (
-              <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-[#06B6D4] shadow-[0_0_6px_#06b6d4]" />
-            )}
           </button>
         );
       })}

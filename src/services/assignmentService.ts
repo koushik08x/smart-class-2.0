@@ -2,6 +2,7 @@ import { supabase, isSupabaseConfigured, realtimeBus } from '../lib/supabase';
 import { dbStore } from './mockDatabase';
 import { Assignment, AssignmentSubmission } from '../types';
 import { storageService } from './storageService';
+import { notificationService } from './notificationService';
 
 export const assignmentService = {
   // Fetch assignments with student submission status attached
@@ -118,22 +119,46 @@ export const assignmentService = {
 
     realtimeBus.emit('assignment_created', newAssignment);
 
-    // Notify all students
-    for (const student of dbStore.profiles.filter((p) => p.role === 'student')) {
-      dbStore.notifications.push({
-        id: `notif-${Date.now()}-${student.id.substring(0, 4)}`,
-        user_id: student.id,
-        title: `New Assignment: ${data.title}`,
-        message: `Due on ${new Date(data.deadline).toLocaleDateString()}. Max Marks: ${data.maxMarks}`,
-        notification_type: 'assignment',
-        related_id: newAssignment.id,
-        is_read: false,
-        created_at: new Date().toISOString(),
-      });
-    }
-    dbStore.persist();
+    // Automatically notify relevant students using central academic notification engine
+    await notificationService.dispatchAcademicNotification({
+      title: `New Assignment: ${data.title}`,
+      message: `Due on ${new Date(data.deadline).toLocaleDateString()}. Max Marks: ${data.maxMarks}.`,
+      notificationType: 'assignment',
+      relatedId: newAssignment.id,
+      targetSection: '1CSE22',
+    });
 
     return newAssignment;
+  },
+
+  // Faculty: Update assignment deadline and notify students
+  async updateAssignmentDeadline(assignmentId: string, newDeadline: string): Promise<Assignment | null> {
+    const assignment = dbStore.assignments.find((a) => a.id === assignmentId);
+    if (!assignment) return null;
+
+    assignment.deadline = newDeadline;
+    dbStore.persist();
+
+    if (isSupabaseConfigured) {
+      try {
+        await supabase.from('assignments').update({ deadline: newDeadline }).eq('id', assignmentId);
+      } catch (err) {
+        console.warn('Supabase deadline update error:', err);
+      }
+    }
+
+    realtimeBus.emit('assignment_updated', assignment);
+
+    // Automatically notify all students in section
+    await notificationService.dispatchAcademicNotification({
+      title: `Deadline Updated: ${assignment.title}`,
+      message: `The deadline for ${assignment.title} has been moved to ${new Date(newDeadline).toLocaleString()}.`,
+      notificationType: 'assignment',
+      relatedId: `${assignment.id}-deadline`,
+      targetSection: '1CSE22',
+    });
+
+    return assignment;
   },
 
   // Faculty grade submission
@@ -149,18 +174,15 @@ export const assignmentService = {
       assignment.user_submission.submission_status = 'graded';
       dbStore.persist();
 
-      // Notify student
-      dbStore.notifications.push({
-        id: `notif-${Date.now()}`,
-        user_id: assignment.user_submission.student_id,
+      // Automatically notify individual student
+      await notificationService.dispatchAcademicNotification({
         title: 'Assignment Graded',
         message: `Your submission for "${assignment.title}" received ${grade}/${assignment.max_marks} marks.`,
-        notification_type: 'assignment',
-        related_id: assignment.id,
-        is_read: false,
-        created_at: new Date().toISOString(),
+        notificationType: 'assignment',
+        relatedId: `${assignment.id}-graded`,
+        targetStudentId: assignment.user_submission.student_id,
       });
-      dbStore.persist();
+
       realtimeBus.emit('assignment_graded', assignment);
     }
   }

@@ -31,14 +31,18 @@ import {
   getSubjectByAbbr,
 } from '../data/academicData';
 
+// Default credentials for authenticated demo access
+export const DEFAULT_DEMO_PASSWORD = 'Password123!';
+export const DEFAULT_PASSWORD_HASH = '9d2eab2a0a16903dc584c56cb2a56a640c085ad347a78d7eb71d1f12ce300816';
+
 // Profiles: Faculty, Administrators, and Students for Sapthagiri NPS University
-export const INITIAL_PROFILES: UserProfile[] = [
-  // Super Admin
+const RAW_PROFILES: Omit<UserProfile, 'password_hash'>[] = [
+  // Class Admin (Department Administrator)
   {
     id: '00000000-0000-0000-0000-000000000001',
     full_name: 'Dr. Katherine Vance',
     email: 'admin@snpsu.edu.in',
-    role: 'super_admin',
+    role: 'class_admin',
     student_id: 'EMP-ADM-01',
     department: 'Computer Science and Engineering',
     semester: 1,
@@ -217,6 +221,11 @@ export const INITIAL_PROFILES: UserProfile[] = [
   },
 ];
 
+export const INITIAL_PROFILES: UserProfile[] = RAW_PROFILES.map((p) => ({
+  ...p,
+  password_hash: DEFAULT_PASSWORD_HASH,
+}));
+
 export const INITIAL_REGISTRATION_REQUESTS: RegistrationRequest[] = [
   {
     id: 'req-001',
@@ -302,7 +311,7 @@ Please check your batch allocations before attending lab periods.`,
     description: `First Internal Assessment for Semester 1 will cover portions completed up to Unit 2 across 25BEPHY101 (MAT), 25BEPHY102 (PHY), 25BEPHY103 (DTI), 25BEPHY104 (PSC), 25BEPHY105 (BEE), 25BEPHY106 (CAEG), 25BEPHY107 (ENG) and 25BEPHY108 (IPR). Review courseware in the study materials section.`,
     author_id: '00000000-0000-0000-0000-000000000001',
     author_name: 'Dr. Katherine Vance',
-    author_role: 'super_admin',
+    author_role: 'class_admin',
     priority: 'normal',
     is_pinned: false,
     target_section: '1CSE22',
@@ -715,7 +724,15 @@ function getOrInit<T>(key: string, initial: T): T {
       return initial;
     }
     const raw = localStorage.getItem(`sc2_${key}`);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (key === 'profiles' && Array.isArray(parsed)) {
+        parsed.forEach((p: any) => {
+          if (!p.password_hash) p.password_hash = DEFAULT_PASSWORD_HASH;
+        });
+      }
+      return parsed;
+    }
   } catch (err) {
     console.warn('LocalStorage read error for key:', key);
   }

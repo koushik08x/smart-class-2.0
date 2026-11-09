@@ -70,8 +70,10 @@ A next-generation institutional academic hub built with **React**, **Tailwind CS
 ## ⚡ Architecture & Features
 
 1. **Role-Based Access Control (RBAC):**
-   - 4 Institutional Roles: `super_admin`, `class_admin`, `faculty`, `student`.
-   - Admin account approval workflow with pending quarantine views.
+   - Strictly 3 Institutional Roles: `class_admin` (Class Admin), `faculty` (Faculty), and `student` (Student).
+   - Strict dashboard segregation: Class Admin Portal, Faculty Desk, and Student Hub.
+   - Class Admin accounts cannot be self-registered; only manually provisioned by the application owner.
+   - Admin account approval workflow for student and faculty registration requests.
 
 2. **Supabase PostgreSQL & Security (RLS):**
    - Full migration schema located in `supabase/migrations/20250101000000_smartclassroom_schema.sql`.

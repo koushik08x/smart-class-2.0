@@ -24,18 +24,16 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
 
   const initials = getInitials(name);
 
-  // Gradient based on institutional role
-  const getGradient = (r?: string) => {
+  // Styling based on institutional role within the 3-colour system
+  const getRoleStyle = (r?: string) => {
     switch (r) {
-      case 'super_admin':
-        return 'bg-gradient-to-br from-[#EC4899] to-[#BE185D] text-white border-pink-400/40 shadow-[0_0_12px_rgba(236,72,153,0.35)]';
       case 'class_admin':
-        return 'bg-gradient-to-br from-[#8B5CF6] to-[#6366F1] text-white border-purple-400/40 shadow-[0_0_12px_rgba(139,92,246,0.35)]';
+        return 'bg-gradient-to-br from-[#C65D32] to-[#A2461F] text-[#F5F0E6] border-[#C65D32]/60 shadow-[0_2px_12px_rgba(198,93,50,0.35)]';
       case 'faculty':
-        return 'bg-gradient-to-br from-[#06B6D4] to-[#0284C7] text-white border-cyan-400/40 shadow-[0_0_12px_rgba(6,182,212,0.35)]';
+        return 'bg-[#171717] text-[#F5F0E6] border-[#C65D32]/50 shadow-sm';
       case 'student':
       default:
-        return 'bg-gradient-to-br from-[#10B981] to-[#059669] text-white border-emerald-400/40 shadow-[0_0_12px_rgba(16,185,129,0.35)]';
+        return 'bg-[#EDE5D8] text-[#171717] border-[#D5C8B2] font-bold';
     }
   };
 
@@ -61,7 +59,7 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
     <div
       className={`inline-flex items-center justify-center font-bold tracking-wider font-mono select-none border shrink-0 ${getSizeClasses(
         size
-      )} ${getGradient(role)} ${className}`}
+      )} ${getRoleStyle(role)} ${className}`}
       title={`${name} (${role})`}
     >
       {initials}

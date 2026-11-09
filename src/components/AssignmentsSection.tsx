@@ -9,10 +9,11 @@ import {
   Upload,
   AlertTriangle,
   CheckCircle2,
-  FileCode,
   Award,
   X,
   Plus,
+  Calendar,
+  AlertCircle,
 } from 'lucide-react';
 
 export const AssignmentsSection: React.FC = () => {
@@ -104,17 +105,22 @@ export const AssignmentsSection: React.FC = () => {
     loadData();
   };
 
+  const totalCount = assignments.length;
+  const gradedCount = assignments.filter((a) => a.user_submission?.submission_status === 'graded').length;
+  const submittedCount = assignments.filter((a) => a.user_submission?.submission_status === 'submitted').length;
+  const pendingCount = totalCount - (gradedCount + submittedCount);
+
   return (
     <div className="space-y-6">
       {/* Section Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-white/10">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#E5DCCB]">
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-[11px] font-mono tracking-widest text-[#8B5CF6] uppercase">LABORATORY DELIVERABLES</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-[#8B5CF6]" />
-            <span className="text-xs text-slate-400">Assessments & Deadlines</span>
+            <span className="text-[11px] font-mono tracking-widest text-[#C65D32] uppercase font-bold">LABORATORY DELIVERABLES</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-[#C65D32]" />
+            <span className="text-xs text-[#5C554B]">Assessments & Deadlines</span>
           </div>
-          <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2 mt-1">
+          <h2 className="text-xl sm:text-2xl font-black text-[#171717] tracking-tight mt-0.5">
             Course Assignments & Lab Submissions
           </h2>
         </div>
@@ -122,7 +128,7 @@ export const AssignmentsSection: React.FC = () => {
         {(isFaculty || isAdmin) && (
           <button
             onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-full btn-spatial-primary text-xs font-semibold text-white shadow-lg self-start sm:self-auto"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-2xl btn-burnt-orange text-xs font-bold shadow-md self-start sm:self-auto cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Create Assignment</span>
@@ -130,17 +136,56 @@ export const AssignmentsSection: React.FC = () => {
         )}
       </div>
 
-      {/* Assignments List */}
+      {/* 30% INK-BLACK LARGE FEATURE PANEL: Assignment Telemetry Radar */}
+      <div className="p-6 sm:p-8 rounded-3xl bg-[#171717] border border-[#2E2E2E] text-[#F5F0E6] shadow-2xl relative overflow-hidden">
+        <div className="absolute -top-12 -right-12 w-48 h-48 bg-[#C65D32]/15 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="space-y-2">
+            <span className="text-[10px] font-mono uppercase tracking-widest px-2.5 py-1 rounded-full bg-[#C65D32]/20 text-[#C65D32] border border-[#C65D32]/40 font-bold">
+              SUBMISSION TELEMETRY
+            </span>
+            <h3 className="text-2xl sm:text-3xl font-black text-[#F5F0E6] tracking-tight">
+              Academic Assessment Tracker
+            </h3>
+            <p className="text-xs text-[#B3ADA3] max-w-xl leading-relaxed">
+              Track course problem sets, laboratory code repositories, and term paper deadlines. Late submissions require prior departmental permission.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="p-3.5 rounded-2xl bg-[#222222] border border-[#2E2E2E] text-center">
+              <span className="text-2xl sm:text-3xl font-black text-[#F5F0E6] tabular-nums">{totalCount}</span>
+              <p className="text-[10px] font-mono uppercase tracking-wider text-[#9E978C] mt-0.5">Total Tasks</p>
+            </div>
+            <div className="p-3.5 rounded-2xl bg-[#222222] border border-[#2E2E2E] text-center">
+              <span className="text-2xl sm:text-3xl font-black text-[#C65D32] tabular-nums">{pendingCount}</span>
+              <p className="text-[10px] font-mono uppercase tracking-wider text-[#9E978C] mt-0.5">Pending</p>
+            </div>
+            <div className="p-3.5 rounded-2xl bg-[#222222] border border-[#2E2E2E] text-center">
+              <span className="text-2xl sm:text-3xl font-black text-[#EDE5D8] tabular-nums">{submittedCount}</span>
+              <p className="text-[10px] font-mono uppercase tracking-wider text-[#9E978C] mt-0.5">Submitted</p>
+            </div>
+            <div className="p-3.5 rounded-2xl bg-[#222222] border border-[#2E2E2E] text-center">
+              <span className="text-2xl sm:text-3xl font-black text-emerald-400 tabular-nums">{gradedCount}</span>
+              <p className="text-[10px] font-mono uppercase tracking-wider text-[#9E978C] mt-0.5">Graded</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 60% CREAM WORKSPACE: Assignments List */}
       {loading ? (
         <div className="space-y-4 animate-pulse">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-40 rounded-3xl glass-card bg-white/[0.02]" />
+            <div key={i} className="h-40 rounded-3xl bg-white border border-[#E5DCCB]" />
           ))}
         </div>
       ) : assignments.length === 0 ? (
-        <div className="p-12 text-center rounded-3xl glass-card">
-          <FileCheck2 className="w-10 h-10 text-slate-500 mx-auto mb-3" />
-          <p className="text-slate-300 font-medium">No pending course assignments.</p>
+        <div className="p-12 text-center rounded-3xl bg-white border border-[#E5DCCB]">
+          <FileCheck2 className="w-10 h-10 text-[#7A7265] mx-auto mb-3" />
+          <p className="text-[#171717] font-bold">No course assignments currently published.</p>
+          <p className="text-xs text-[#7A7265] mt-1">Check back once lecture modules complete.</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -153,98 +198,92 @@ export const AssignmentsSection: React.FC = () => {
             return (
               <div
                 key={asg.id}
-                className={`p-6 rounded-3xl glass-card transition-all relative overflow-hidden ${
-                  isGraded
-                    ? 'border-t-emerald-500/50 bg-emerald-950/10'
-                    : isSubmitted
-                    ? 'border-t-[#06B6D4]/50'
-                    : isOverdue
-                    ? 'border-t-rose-500/50 bg-rose-950/10'
-                    : 'hover:border-white/20'
-                }`}
+                className="p-6 sm:p-7 rounded-3xl bg-white border border-[#E5DCCB] shadow-sm hover:border-[#C65D32] transition-all space-y-4"
               >
-                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-3">
-                  <div>
-                    <div className="flex items-center gap-2 mb-1.5">
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-[#8B5CF6]/15 text-[#d0bcff] border border-[#8B5CF6]/30">
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2.5 py-0.5 rounded-md text-[10px] font-mono font-black bg-[#171717] text-[#F5F0E6]">
                         {asg.subject_code}
                       </span>
-                      <span className="text-xs font-mono text-slate-400">Max Marks: {asg.max_marks}</span>
+                      <span className="text-xs font-mono font-bold text-[#5C554B]">Max Marks: {asg.max_marks}</span>
                     </div>
-                    <h3 className="text-lg font-bold text-white leading-tight">{asg.title}</h3>
+                    <h3 className="text-lg font-black text-[#171717] leading-snug">{asg.title}</h3>
                   </div>
 
                   {/* Status Badge */}
                   <div>
                     {isGraded ? (
-                      <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-xs font-semibold shadow-[0_0_12px_rgba(16,185,129,0.3)]">
-                        <Award className="w-3.5 h-3.5" />
-                        <span>Graded: {submission.grade}/{asg.max_marks}</span>
+                      <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold border border-emerald-200">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                        <span>GRADED ({submission?.grade} / {asg.max_marks})</span>
                       </div>
                     ) : isSubmitted ? (
-                      <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 text-xs font-semibold">
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                        <span>Submitted</span>
+                      <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#171717] text-[#F5F0E6] text-xs font-bold">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                        <span>SUBMITTED FOR REVIEW</span>
                       </div>
                     ) : isOverdue ? (
-                      <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/40 text-xs font-semibold">
-                        <AlertTriangle className="w-3.5 h-3.5" />
-                        <span>Past Deadline</span>
+                      <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-100 text-rose-800 text-xs font-bold border border-rose-200">
+                        <AlertTriangle className="w-4 h-4 text-rose-600" />
+                        <span>OVERDUE DEADLINE</span>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-semibold">
-                        <Clock className="w-3.5 h-3.5" />
-                        <span>Action Required</span>
+                      <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#C65D32]/15 text-[#C65D32] border border-[#C65D32]/30 text-xs font-bold">
+                        <Clock className="w-4 h-4" />
+                        <span>PENDING SUBMISSION</span>
                       </div>
                     )}
                   </div>
                 </div>
 
-                <p className="text-xs text-slate-300 leading-relaxed mb-4">{asg.description}</p>
+                <p className="text-xs text-[#5C554B] leading-relaxed">{asg.description}</p>
 
-                {/* Graded Feedback Box */}
-                {isGraded && submission.feedback && (
-                  <div className="mb-4 p-3 rounded-2xl bg-black/40 border border-emerald-500/20 text-xs">
-                    <p className="text-[11px] font-mono text-emerald-400 uppercase tracking-wider mb-1">
-                      Faculty Evaluation & Feedback
-                    </p>
-                    <p className="text-slate-300">{submission.feedback}</p>
+                {/* Feedback Box if Graded */}
+                {isGraded && submission?.feedback && (
+                  <div className="p-3.5 rounded-2xl bg-[#FAF7F2] border border-[#E5DCCB] text-xs">
+                    <span className="text-[10px] font-mono uppercase text-[#C65D32] font-black block mb-0.5">Faculty Feedback:</span>
+                    <p className="text-[#171717] font-medium">{submission.feedback}</p>
                   </div>
                 )}
 
-                <div className="pt-3 border-t border-white/5 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-400">
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-3.5 h-3.5 text-[#06B6D4]" />
-                    <span className="font-mono">
-                      Due: {new Date(asg.deadline).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
-                    </span>
+                {/* Footer details & Action Buttons */}
+                <div className="pt-3 border-t border-[#E5DCCB] flex flex-wrap items-center justify-between gap-3 text-xs">
+                  <div className="flex flex-wrap items-center gap-4 text-[#5C554B]">
+                    <div className="flex items-center gap-1.5">
+                      <Clock className="w-4 h-4 text-[#C65D32]" />
+                      <span className="font-mono">
+                        Deadline: <strong className="text-[#171717]">{new Date(asg.deadline).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</strong>
+                      </span>
+                    </div>
+                    <span>Faculty: <strong className="text-[#171717]">{asg.faculty_name}</strong></span>
                   </div>
 
                   <div className="flex items-center gap-2">
-                    {/* Faculty grading action */}
-                    {(isFaculty || isAdmin) && submission && (
+                    {/* Faculty Grade Action */}
+                    {(isFaculty || isAdmin) && isSubmitted && !isGraded && (
                       <button
                         onClick={() => {
                           setGradingAssignment(asg);
-                          setGradeInput(submission.grade || 85);
-                          setFeedbackInput(submission.feedback || '');
+                          setGradeInput(asg.max_marks * 0.9);
                         }}
-                        className="px-3.5 py-1.5 rounded-full btn-spatial-secondary text-xs text-cyan-300 hover:text-white border border-cyan-500/30"
+                        className="px-3.5 py-1.5 rounded-xl btn-ink text-xs font-bold"
                       >
-                        {isGraded ? 'Review Grade' : 'Grade Submission'}
+                        Grade Submission
                       </button>
                     )}
 
-                    {/* Student upload submission */}
+                    {/* Student Submit / Re-submit Action */}
                     {!isGraded && (
                       <button
-                        onClick={() => setSubmittingAssignment(asg)}
-                        className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold text-white shadow-md transition-all ${
-                          isSubmitted ? 'btn-spatial-secondary' : 'btn-spatial-primary'
-                        }`}
+                        onClick={() => {
+                          setSubmittingAssignment(asg);
+                          setSubmissionError(null);
+                        }}
+                        className="px-4 py-2 rounded-xl btn-burnt-orange text-xs font-bold"
                       >
                         <Upload className="w-3.5 h-3.5" />
-                        <span>{isSubmitted ? 'Resubmit Solution' : 'Submit Solution'}</span>
+                        <span>{isSubmitted ? 'Resubmit Deliverable' : 'Upload Submission'}</span>
                       </button>
                     )}
                   </div>
@@ -255,75 +294,61 @@ export const AssignmentsSection: React.FC = () => {
         </div>
       )}
 
-      {/* Student Submission Modal */}
+      {/* Student Upload Submission Modal */}
       {submittingAssignment && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-          <div className="w-full max-w-lg rounded-3xl glass-modal p-6 border border-white/20 shadow-2xl relative animate-in fade-in zoom-in-95">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
+          <div className="w-full max-w-lg rounded-3xl bg-[#171717] text-[#F5F0E6] p-6 sm:p-8 border border-[#2E2E2E] shadow-2xl relative animate-in fade-in zoom-in-95">
             <button
               onClick={() => setSubmittingAssignment(null)}
-              className="absolute top-5 right-5 p-1.5 rounded-xl hover:bg-white/10 text-slate-400 hover:text-white"
+              className="absolute top-5 right-5 p-1.5 rounded-xl hover:bg-white/10 text-[#9E978C] hover:text-[#F5F0E6]"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <div className="flex items-center gap-2 mb-4">
-              <Upload className="w-5 h-5 text-[#8B5CF6]" />
+            <div className="flex items-center gap-3 mb-5">
+              <div className="p-2 rounded-xl bg-[#C65D32]/20 text-[#C65D32]">
+                <Upload className="w-5 h-5" />
+              </div>
               <div>
-                <span className="text-[10px] font-mono uppercase text-[#06B6D4]">
-                  {submittingAssignment.subject_code} &bull; SECURE LAB DROPBOX
-                </span>
-                <h3 className="text-lg font-bold text-white">{submittingAssignment.title}</h3>
+                <h3 className="text-lg font-black text-[#F5F0E6]">Upload Assignment File</h3>
+                <p className="text-xs text-[#9E978C] truncate max-w-sm">{submittingAssignment.title}</p>
               </div>
             </div>
 
             {submissionError && (
-              <div className="mb-4 p-3 rounded-xl bg-rose-500/20 border border-rose-500/30 text-rose-300 text-xs">
-                {submissionError}
+              <div className="mb-4 p-3.5 rounded-2xl bg-rose-500/20 border border-rose-500/40 text-rose-300 text-xs flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{submissionError}</span>
               </div>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-mono uppercase text-slate-400 mb-1">
-                  Upload Code Archive or Report (.zip, .c, .py, .pdf, max 30MB)
+                <label className="block text-xs font-mono uppercase text-[#B3ADA3] font-bold mb-1.5">
+                  Select Deliverable (PDF, ZIP, C/CPP source)
                 </label>
-                <div className="relative border-2 border-dashed border-white/15 hover:border-[#8B5CF6]/50 rounded-2xl p-6 text-center cursor-pointer transition-colors bg-black/30">
-                  <input
-                    type="file"
-                    required
-                    accept=".zip,.tar.gz,.c,.cpp,.py,.pdf,.sql"
-                    onChange={(e) => setSubmissionFile(e.target.files?.[0] || null)}
-                    className="absolute inset-0 opacity-0 cursor-pointer"
-                  />
-                  <FileCode className="w-8 h-8 text-slate-400 mx-auto mb-2" />
-                  <p className="text-xs text-slate-200 font-medium">
-                    {submissionFile ? submissionFile.name : 'Click to select solution archive'}
-                  </p>
-                  <p className="text-[10px] text-slate-500 mt-1">
-                    Auto-stamped with Student ID: {user?.student_id || '26CS101'}
-                  </p>
-                </div>
+                <input
+                  type="file"
+                  required
+                  onChange={(e) => setSubmissionFile(e.target.files?.[0] || null)}
+                  className="w-full px-4 py-3 rounded-xl bg-[#242424] border border-[#333333] text-xs text-[#F5F0E6] file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-[#C65D32] file:text-[#F5F0E6] cursor-pointer"
+                />
               </div>
 
-              <div className="p-3 rounded-2xl bg-white/[0.02] border border-white/5 text-[11px] text-slate-400 space-y-1">
-                <p>&bull; Target Supabase Bucket: <code className="text-white">assignment-submissions</code></p>
-                <p>&bull; Enforces student ownership check <code className="text-cyan-300">auth.uid() = student_id</code></p>
-              </div>
-
-              <div className="flex items-center justify-end gap-3 pt-2">
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#2B2B2B]">
                 <button
                   type="button"
                   onClick={() => setSubmittingAssignment(null)}
-                  className="px-4 py-2 rounded-full btn-spatial-secondary text-xs text-slate-300"
+                  className="px-4 py-2 rounded-xl btn-ink text-xs"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isUploading}
-                  className="px-5 py-2 rounded-full btn-spatial-primary text-xs font-semibold text-white shadow-lg"
+                  className="px-5 py-2.5 rounded-xl btn-burnt-orange text-xs font-bold"
                 >
-                  {isUploading ? 'Encrypting & Uploading...' : 'Confirm Submission'}
+                  {isUploading ? 'Uploading Deliverable...' : 'Submit Assignment'}
                 </button>
               </div>
             </form>
@@ -332,71 +357,68 @@ export const AssignmentsSection: React.FC = () => {
       )}
 
       {/* Faculty Grading Modal */}
-      {gradingAssignment && gradingAssignment.user_submission && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-          <div className="w-full max-w-lg rounded-3xl glass-modal p-6 border border-white/20 shadow-2xl relative animate-in fade-in zoom-in-95">
+      {gradingAssignment && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
+          <div className="w-full max-w-lg rounded-3xl bg-[#171717] text-[#F5F0E6] p-6 sm:p-8 border border-[#2E2E2E] shadow-2xl relative animate-in fade-in zoom-in-95">
             <button
               onClick={() => setGradingAssignment(null)}
-              className="absolute top-5 right-5 p-1.5 rounded-xl hover:bg-white/10 text-slate-400 hover:text-white"
+              className="absolute top-5 right-5 p-1.5 rounded-xl hover:bg-white/10 text-[#9E978C] hover:text-[#F5F0E6]"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <div className="flex items-center gap-2 mb-4">
-              <Award className="w-5 h-5 text-[#06B6D4]" />
-              <div>
-                <span className="text-[10px] font-mono uppercase text-[#06B6D4]">
-                  FACULTY ASSESSMENT DESK
-                </span>
-                <h3 className="text-lg font-bold text-white">Grade Student Submission</h3>
+            <div className="flex items-center gap-3 mb-5">
+              <div className="p-2 rounded-xl bg-[#C65D32]/20 text-[#C65D32]">
+                <Award className="w-5 h-5" />
               </div>
-            </div>
-
-            <div className="p-3 rounded-2xl bg-black/40 border border-white/10 mb-4 text-xs space-y-1">
-              <p className="text-slate-300">Student: <strong>{gradingAssignment.user_submission.student_name}</strong></p>
-              <p className="text-slate-400 font-mono">File: {gradingAssignment.user_submission.file_name}</p>
+              <div>
+                <h3 className="text-lg font-black text-[#F5F0E6]">Grade Submission</h3>
+                <p className="text-xs text-[#9E978C] truncate max-w-sm">{gradingAssignment.title}</p>
+              </div>
             </div>
 
             <form onSubmit={handleGrade} className="space-y-4">
               <div>
-                <label className="block text-xs font-mono uppercase text-slate-400 mb-1">
-                  Marks Awarded (out of {gradingAssignment.max_marks})
+                <label className="block text-xs font-mono uppercase text-[#B3ADA3] font-bold mb-1.5">
+                  Awarded Marks (Out of {gradingAssignment.max_marks})
                 </label>
                 <input
                   type="number"
-                  min={0}
-                  max={gradingAssignment.max_marks}
                   required
+                  min="0"
+                  max={gradingAssignment.max_marks}
                   value={gradeInput}
                   onChange={(e) => setGradeInput(Number(e.target.value))}
-                  className="w-full px-4 py-2.5 rounded-2xl glass-input text-white text-sm"
+                  className="w-full px-4 py-2.5 rounded-xl input-ink text-sm font-mono"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-mono uppercase text-slate-400 mb-1">Feedback & Comments</label>
+                <label className="block text-xs font-mono uppercase text-[#B3ADA3] font-bold mb-1.5">
+                  Evaluation Feedback & Comments
+                </label>
                 <textarea
-                  rows={3}
                   required
+                  rows={3}
                   value={feedbackInput}
                   onChange={(e) => setFeedbackInput(e.target.value)}
-                  className="w-full px-4 py-2 rounded-2xl glass-input text-white text-xs"
+                  className="w-full px-4 py-2.5 rounded-xl input-ink text-xs"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-2">
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#2B2B2B]">
                 <button
                   type="button"
                   onClick={() => setGradingAssignment(null)}
-                  className="px-4 py-2 rounded-full btn-spatial-secondary text-xs text-slate-300"
+                  className="px-4 py-2 rounded-xl btn-ink text-xs"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-full btn-spatial-primary text-xs font-semibold text-white shadow-lg"
+                  className="px-5 py-2.5 rounded-xl btn-burnt-orange text-xs font-bold"
                 >
-                  Save & Notify Student
+                  Save Marks & Publish
                 </button>
               </div>
             </form>
@@ -406,91 +428,99 @@ export const AssignmentsSection: React.FC = () => {
 
       {/* Faculty Create Assignment Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-          <div className="w-full max-w-lg rounded-3xl glass-modal p-6 border border-white/20 shadow-2xl relative animate-in fade-in zoom-in-95">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
+          <div className="w-full max-w-lg rounded-3xl bg-[#171717] text-[#F5F0E6] p-6 sm:p-8 border border-[#2E2E2E] shadow-2xl relative animate-in fade-in zoom-in-95">
             <button
               onClick={() => setShowCreateModal(false)}
-              className="absolute top-5 right-5 p-1.5 rounded-xl hover:bg-white/10 text-slate-400 hover:text-white"
+              className="absolute top-5 right-5 p-1.5 rounded-xl hover:bg-white/10 text-[#9E978C] hover:text-[#F5F0E6]"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <div className="flex items-center gap-2 mb-4">
-              <FileCheck2 className="w-5 h-5 text-[#8B5CF6]" />
-              <h3 className="text-lg font-bold text-white">Create New Course Assignment</h3>
+            <div className="flex items-center gap-3 mb-5">
+              <div className="p-2 rounded-xl bg-[#C65D32]/20 text-[#C65D32]">
+                <Plus className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-lg font-black text-[#F5F0E6]">Create New Assignment</h3>
+                <p className="text-xs text-[#9E978C]">Section 1CSE22 Coursework</p>
+              </div>
             </div>
 
             <form onSubmit={handleCreateAssignment} className="space-y-4">
               <div>
-                <label className="block text-xs font-mono uppercase text-slate-400 mb-1">Assignment Title</label>
+                <label className="block text-xs font-mono uppercase text-[#B3ADA3] font-bold mb-1">Subject</label>
+                <select
+                  value={newSubjectId}
+                  onChange={(e) => setNewSubjectId(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl input-ink text-xs"
+                >
+                  {dbStore.subjects.map((s) => (
+                    <option key={s.id} value={s.id}>{s.subject_code} - {s.subject_name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-mono uppercase text-[#B3ADA3] font-bold mb-1">Title</label>
                 <input
                   type="text"
                   required
+                  placeholder="e.g. Lab Assignment 04: Pointers & Linked Structures"
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
-                  placeholder="e.g. Lab 2: Matrix Operations & Dynamic Memory in C"
-                  className="w-full px-4 py-2.5 rounded-2xl glass-input text-white text-sm"
+                  className="w-full px-4 py-2.5 rounded-xl input-ink text-xs"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-mono uppercase text-[#B3ADA3] font-bold mb-1">Description</label>
+                <textarea
+                  required
+                  rows={3}
+                  placeholder="Provide instructions, rubric guidelines, and required format..."
+                  value={newDesc}
+                  onChange={(e) => setNewDesc(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl input-ink text-xs"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-mono uppercase text-slate-400 mb-1">Subject</label>
-                  <select
-                    value={newSubjectId}
-                    onChange={(e) => setNewSubjectId(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-2xl glass-input bg-[#0B0F1F] text-white text-xs"
-                  >
-                    {dbStore.subjects.map((s) => (
-                      <option key={s.id} value={s.id}>{s.subject_code} - {s.subject_name}</option>
-                    ))}
-                  </select>
+                  <label className="block text-xs font-mono uppercase text-[#B3ADA3] font-bold mb-1">Deadline</label>
+                  <input
+                    type="datetime-local"
+                    required
+                    value={newDeadline}
+                    onChange={(e) => setNewDeadline(e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-xl input-ink text-xs font-mono"
+                  />
                 </div>
                 <div>
-                  <label className="block text-xs font-mono uppercase text-slate-400 mb-1">Max Marks</label>
+                  <label className="block text-xs font-mono uppercase text-[#B3ADA3] font-bold mb-1">Max Marks</label>
                   <input
                     type="number"
+                    required
+                    min="10"
+                    max="100"
                     value={newMarks}
                     onChange={(e) => setNewMarks(Number(e.target.value))}
-                    className="w-full px-3 py-2.5 rounded-2xl glass-input text-white text-xs"
+                    className="w-full px-3 py-2.5 rounded-xl input-ink text-xs font-mono"
                   />
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-mono uppercase text-slate-400 mb-1">Submission Deadline</label>
-                <input
-                  type="datetime-local"
-                  required
-                  value={newDeadline}
-                  onChange={(e) => setNewDeadline(e.target.value)}
-                  className="w-full px-4 py-2 rounded-2xl glass-input text-white text-xs"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-mono uppercase text-slate-400 mb-1">Specification & Guidelines</label>
-                <textarea
-                  rows={3}
-                  required
-                  value={newDesc}
-                  onChange={(e) => setNewDesc(e.target.value)}
-                  placeholder="Detail instructions, test cases, and delivery expectations..."
-                  className="w-full px-4 py-2 rounded-2xl glass-input text-white text-xs"
-                />
-              </div>
-
-              <div className="flex items-center justify-end gap-3 pt-2">
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#2B2B2B]">
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2 rounded-full btn-spatial-secondary text-xs text-slate-300"
+                  className="px-4 py-2 rounded-xl btn-ink text-xs"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-full btn-spatial-primary text-xs font-semibold text-white shadow-lg"
+                  className="px-5 py-2.5 rounded-xl btn-burnt-orange text-xs font-bold"
                 >
                   Publish Assignment
                 </button>

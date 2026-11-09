@@ -45,7 +45,19 @@ export const storageService = {
 
         if (error) throw error;
 
-        // Get public URL or signed URL
+        // For private buckets, generate signed URL; for public buckets, get public URL
+        if (bucket === 'assignment-submissions') {
+          const { data: signedData, error: signErr } = await supabase.storage
+            .from(bucket)
+            .createSignedUrl(data.path, 3600);
+          if (!signErr && signedData) {
+            return {
+              path: data.path,
+              url: signedData.signedUrl,
+            };
+          }
+        }
+
         const { data: publicUrlData } = supabase.storage.from(bucket).getPublicUrl(data.path);
         return {
           path: data.path,
@@ -64,9 +76,13 @@ export const storageService = {
     };
   },
 
-  // Generate downloadable or viewable URL
-  getFileUrl(bucket: string, path: string): string {
+  // Generate downloadable or viewable URL (signed URL for private buckets)
+  async getFileUrl(bucket: string, path: string): Promise<string> {
     if (isSupabaseConfigured && !path.startsWith('blob:') && !path.startsWith('http')) {
+      if (bucket === 'assignment-submissions') {
+        const { data } = await supabase.storage.from(bucket).createSignedUrl(path, 3600);
+        return data?.signedUrl || path;
+      }
       const { data } = supabase.storage.from(bucket).getPublicUrl(path);
       return data.publicUrl;
     }

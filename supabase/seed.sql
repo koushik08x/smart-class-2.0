@@ -5,10 +5,32 @@
 -- Class Advisor: Mr. Prathap M S
 -- ============================================================================
 
+-- 0. AUTH USERS (Satisfies foreign key constraint for public.profiles on Supabase)
+DO $$ BEGIN
+  INSERT INTO auth.users (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
+  VALUES
+    ('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'admin@snpsu.edu.in', crypt('Password123!', gen_salt('bf')), NOW(), '{"provider":"email","providers":["email"]}', '{"full_name":"Dr. Katherine Vance","role":"class_admin"}', NOW(), NOW()),
+    ('00000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'alex.mercer@snpsu.edu.in', crypt('Password123!', gen_salt('bf')), NOW(), '{"provider":"email","providers":["email"]}', '{"full_name":"Alex Mercer","role":"class_admin"}', NOW(), NOW()),
+    ('00000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'prathap.ms@snpsu.edu.in', crypt('Password123!', gen_salt('bf')), NOW(), '{"provider":"email","providers":["email"]}', '{"full_name":"Mr. Prathap M S","role":"faculty"}', NOW(), NOW()),
+    ('00000000-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'prajwala.ym@snpsu.edu.in', crypt('Password123!', gen_salt('bf')), NOW(), '{"provider":"email","providers":["email"]}', '{"full_name":"Mrs. Prajwala Y M","role":"faculty"}', NOW(), NOW()),
+    ('00000000-0000-0000-0000-000000000005', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'umesh.a@snpsu.edu.in', crypt('Password123!', gen_salt('bf')), NOW(), '{"provider":"email","providers":["email"]}', '{"full_name":"Mr. Umesh Anthakanavar","role":"faculty"}', NOW(), NOW()),
+    ('00000000-0000-0000-0000-000000000006', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'priyadarshini.hp@snpsu.edu.in', crypt('Password123!', gen_salt('bf')), NOW(), '{"provider":"email","providers":["email"]}', '{"full_name":"Mrs. Priyadarshini H P","role":"faculty"}', NOW(), NOW()),
+    ('00000000-0000-0000-0000-000000000007', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'sneha.s@snpsu.edu.in', crypt('Password123!', gen_salt('bf')), NOW(), '{"provider":"email","providers":["email"]}', '{"full_name":"Mrs. Sneha S","role":"faculty"}', NOW(), NOW()),
+    ('00000000-0000-0000-0000-000000000008', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'raghavendra.n@snpsu.edu.in', crypt('Password123!', gen_salt('bf')), NOW(), '{"provider":"email","providers":["email"]}', '{"full_name":"Mr. Raghavendra N","role":"faculty"}', NOW(), NOW()),
+    ('00000000-0000-0000-0000-000000000009', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'hrd.english@snpsu.edu.in', crypt('Password123!', gen_salt('bf')), NOW(), '{"provider":"email","providers":["email"]}', '{"full_name":"HRD Trainer","role":"faculty"}', NOW(), NOW()),
+    ('00000000-0000-0000-0000-000000000010', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'aarav.sharma@snpsu.edu.in', crypt('Password123!', gen_salt('bf')), NOW(), '{"provider":"email","providers":["email"]}', '{"full_name":"Aarav Sharma","role":"student"}', NOW(), NOW()),
+    ('00000000-0000-0000-0000-000000000011', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'maya.patel@snpsu.edu.in', crypt('Password123!', gen_salt('bf')), NOW(), '{"provider":"email","providers":["email"]}', '{"full_name":"Maya Patel","role":"student"}', NOW(), NOW()),
+    ('00000000-0000-0000-0000-000000000012', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'rohan.gupta@snpsu.edu.in', crypt('Password123!', gen_salt('bf')), NOW(), '{"provider":"email","providers":["email"]}', '{"full_name":"Rohan Gupta","role":"student"}', NOW(), NOW()),
+    ('00000000-0000-0000-0000-000000000099', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'priya.verma@snpsu.edu.in', crypt('Password123!', gen_salt('bf')), NOW(), '{"provider":"email","providers":["email"]}', '{"full_name":"Priya Verma","role":"student"}', NOW(), NOW())
+  ON CONFLICT (id) DO NOTHING;
+EXCEPTION
+  WHEN OTHERS THEN null;
+END $$;
+
 -- 1. PROFILES
 INSERT INTO public.profiles (id, full_name, email, role, student_id, department, semester, section, approval_status, avatar_url)
 VALUES
-  ('00000000-0000-0000-0000-000000000001', 'Dr. Katherine Vance', 'admin@snpsu.edu.in', 'super_admin', 'EMP-ADM-01', 'Computer Science and Engineering', 1, '1CSE22', 'approved', 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150'),
+  ('00000000-0000-0000-0000-000000000001', 'Dr. Katherine Vance', 'admin@snpsu.edu.in', 'class_admin', 'EMP-ADM-01', 'Computer Science and Engineering', 1, '1CSE22', 'approved', 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150'),
   ('00000000-0000-0000-0000-000000000002', 'Alex Mercer', 'alex.mercer@snpsu.edu.in', 'class_admin', '26CS1002', 'Computer Science and Engineering', 1, '1CSE22', 'approved', 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'),
   ('00000000-0000-0000-0000-000000000003', 'Mr. Prathap M S', 'prathap.ms@snpsu.edu.in', 'faculty', 'FAC-PSC-01', 'Computer Science and Engineering', 1, '1CSE22', 'approved', 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150'),
   ('00000000-0000-0000-0000-000000000004', 'Mrs. Prajwala Y M', 'prajwala.ym@snpsu.edu.in', 'faculty', 'FAC-MAT-02', 'Computer Science and Engineering', 1, '1CSE22', 'approved', 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150'),
